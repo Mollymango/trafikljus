@@ -70,8 +70,8 @@ void Error_Handler(void);
 #define LDGREENWALK_GPIO_Port GPIOA
 #define LDWORK_Pin GPIO_PIN_6
 #define LDWORK_GPIO_Port GPIOA
-#define B1_Pin GPIO_PIN_4
-#define B1_GPIO_Port GPIOC
+#define KNAPP_Pin GPIO_PIN_4
+#define KNAPP_GPIO_Port GPIOC
 #define LD2_Pin GPIO_PIN_0
 #define LD2_GPIO_Port GPIOB
 #define LD3_Pin GPIO_PIN_1

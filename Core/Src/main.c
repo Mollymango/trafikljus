@@ -27,6 +27,11 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+enum {
+	DEFAULT,
+	WAIT_TO_WALK,
+	WAIT_TO_DRIVE
+}STATE;
 
 /* USER CODE END PTD */
 
@@ -59,7 +64,67 @@ static void MX_USB_PCD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void setDiodes(int num){
+	switch(num){
+	//SET = HÖG = LED LYSER INTE
+	//RESET = LÅG = LED LYSER
+//	enum {
+//		DEFAULT,0
+//		WAIT_TO_WALK,1
+//		WAIT_TO_DRIVE,2
+//	}STATE;
+	case 0: //DEFAULT
+		HAL_GPIO_WritePin(LDGREENCAR_GPIO_Port, LDGREENCAR_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LDYELLOWCAR_GPIO_Port, LDYELLOWCAR_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LDREDCAR_GPIO_Port, LDREDCAR_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LDREDWALK_GPIO_Port, LDREDWALK_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LDGREENWALK_GPIO_Port, LDGREENWALK_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LDWORK_GPIO_Port, LDWORK_Pin, GPIO_PIN_SET);
+		break;
 
+	case 1: //WAIT TO WALK
+		setDiodes(DEFAULT);
+		for(int i = 0; i<50; i++){
+			HAL_GPIO_TogglePin(LDWORK_GPIO_Port, LDWORK_Pin);
+			HAL_Delay(100);
+		}
+
+		HAL_GPIO_WritePin(LDGREENCAR_GPIO_Port, LDGREENCAR_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LDYELLOWCAR_GPIO_Port, LDYELLOWCAR_Pin, GPIO_PIN_RESET);
+
+		HAL_Delay(1000);
+		HAL_GPIO_WritePin(LDYELLOWCAR_GPIO_Port, LDYELLOWCAR_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LDREDCAR_GPIO_Port, LDREDCAR_Pin, GPIO_PIN_RESET);
+
+		HAL_Delay(1000);
+		HAL_GPIO_WritePin(LDREDWALK_GPIO_Port, LDREDWALK_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LDGREENWALK_GPIO_Port, LDGREENWALK_Pin, GPIO_PIN_RESET);
+
+		STATE = WAIT_TO_DRIVE;
+		break;
+
+	case 2: //WAIT TO DRIVE
+		for(int i = 0; i<50; i++){
+			HAL_GPIO_TogglePin(LDWORK_GPIO_Port, LDWORK_Pin);
+			HAL_Delay(100);
+		}
+
+		HAL_Delay(1000);
+		HAL_GPIO_WritePin(LDREDWALK_GPIO_Port, LDREDWALK_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LDGREENWALK_GPIO_Port, LDGREENWALK_Pin, GPIO_PIN_SET);
+
+		HAL_Delay(1000);
+		HAL_GPIO_WritePin(LDYELLOWCAR_GPIO_Port, LDYELLOWCAR_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LDREDCAR_GPIO_Port, LDREDCAR_Pin, GPIO_PIN_SET);
+
+		HAL_Delay(1000);
+		HAL_GPIO_WritePin(LDYELLOWCAR_GPIO_Port, LDYELLOWCAR_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LDGREENCAR_GPIO_Port, LDGREENCAR_Pin, GPIO_PIN_SET);
+
+		STATE = DEFAULT;
+		break;
+	}
+}
 /* USER CODE END 0 */
 
 /**
@@ -98,11 +163,18 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  STATE = DEFAULT;
+  setDiodes(DEFAULT);
   while (1)
   {
+	  if(HAL_GPIO_ReadPin(KNAPP_GPIO_Port, KNAPP_Pin) && STATE == DEFAULT){
+		  STATE = WAIT_TO_WALK;
+	  }
+	  setDiodes(STATE);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -286,7 +358,10 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, LDGREENCAR_Pin|LDYELLOWCAR_Pin|LDREDCAR_Pin|LDREDWALK_Pin
-                          |LDGREENWALK_Pin|LDWORK_Pin|GPIO_PIN_7, GPIO_PIN_RESET);
+                          |LDGREENWALK_Pin|LDWORK_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LD2_Pin|LD3_Pin|LD1_Pin, GPIO_PIN_RESET);
@@ -307,11 +382,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
+  /*Configure GPIO pin : KNAPP_Pin */
+  GPIO_InitStruct.Pin = KNAPP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(KNAPP_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LD2_Pin LD3_Pin LD1_Pin */
   GPIO_InitStruct.Pin = LD2_Pin|LD3_Pin|LD1_Pin;
